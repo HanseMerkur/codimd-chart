@@ -1,0 +1,364 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "codimd.fullname" . }}
+  labels:
+    app: {{ template "codimd.name" . }}
+    chart: {{ template "codimd.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "codimd.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "codimd.name" . }}
+        release: {{ .Release.Name }}
+{{- with .Values.podAnnotations }}
+      annotations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 3000
+            initialDelaySeconds: 120
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 3000
+            initialDelaySeconds: 30
+          env:
+            - name: CMD_DB_HOST
+              value: {{ template "codimd.postgresql.fullname" . }}
+            - name: CMD_DB_PORT
+              value: "{{ .Values.postgresql.service.port }}"
+            - name: CMD_DB_USER
+              value: {{ .Values.postgresql.postgresqlUsername }}
+            - name: CMD_DB_DATABASE
+              value: {{ .Values.postgresql.postgresqlDatabase }}
+            - name: CMD_DB_PASSWORD
+              {{- if .Values.postgresql.enabled }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "codimd.postgresql.fullname" . }}
+                  key: postgresql-password
+              {{- else }}
+              value: {{ .Values.postgresql.postgresqlPassword }}
+              {{- end }}
+            - name: CMD_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "codimd.fullname" . }}
+                  key: sessionSecret
+            - name: CMD_DB_URL
+              value: "postgres://$(CMD_DB_USER):$(CMD_DB_PASSWORD)@$(CMD_DB_HOST):$(CMD_DB_PORT)/$(CMD_DB_DATABASE)"
+            # General CodiMD settings
+            - name: CMD_DOMAIN
+              value: {{ .Values.codimd.domain }}
+            {{- if .Values.codimd.url_path }}
+            - name: CMD_URL_PATH
+              value: {{ .Values.codimd.url_path }}
+            {{- end }}
+            {{- if .Values.codimd.use_ssl }}
+            - name: CMD_PROTOCOL_USESSL
+              value: {{ .Values.codimd.use_ssl }}
+            {{- end }}
+            {{- if .Values.codimd.url_addport }}
+            - name: CMD_URL_ADDRPORT
+              value: {{ .Values.codimd.url_addport }}
+            {{- end }}
+            {{- if .Values.codimd.allow_origin }}
+            - name: CMD_ALLOW_ORIGIN
+              value: {{ .Values.codimd.allow_origin }}
+            {{- end }}
+            {{- if .Values.codimd.allow_pdf_export }}
+            - name: CMD_ALLOW_PDF_EXPORT
+              value: {{ .Values.codimd.allow_pdf_export }}
+            {{- end }}
+            {{- if .Values.codimd.log_level }}
+            - name: CMD_LOGLEVEL
+              value: {{ .Values.codimd.log_level }}
+            {{- end }}
+            {{- if .Values.codimd.allow_freeurl }}
+            - name: CMD_ALLOW_FREEURL
+              value: {{ .Values.codimd.allow_freeurl }}
+            {{- end }}
+            {{- if .Values.codimd.forbidden_note_ids }}
+            - name: CMD_FORBIDDEN_NOTE_IDS
+              value: {{ .Values.codimd.forbidden_note_ids }}
+            {{- end }}
+            {{- if .Values.codimd.csp_enable }}
+            - name: CMD_CSP_ENABLE
+              value: {{ .Values.codimd.csp_enable }}
+            {{- end }}
+            {{- if .Values.codimd.csp_reporturi }}
+            - name: CMD_CSP_REPORTURI
+              value: {{ .Values.codimd.csp_reporturi }}
+            {{- end }}
+            {{- if .Values.codimd.hsts_enable }}
+            - name: CMD_HSTS_ENABLE
+              value: {{ .Values.codimd.hsts_enable }}
+            {{- end }}
+            {{- if .Values.codimd.hsts_include_subdomains }}
+            - name: CMD_HSTS_INCLUDE_SUBDOMAINS
+              value: {{ .Values.codimd.hsts_include_subdomains }}
+            {{- end }}
+            {{- if .Values.codimd.hsts_max_age }}
+            - name: CMD_HSTS_MAX_AGE
+              value: {{ .Values.codimd.hsts_max_age }}
+            {{- end }}
+            {{- if .Values.codimd.hsts_preload }}
+            - name: CMD_HSTS_PRELOAD
+              value: {{ .Values.codimd.hsts_preload }}
+            {{- end }}
+            {{- if .Values.codimd.allow_gravatar }}
+            - name: CMD_ALLOW_GRAVATAR
+              value: {{ .Values.codimd.allow_gravatar }}
+            {{- end }}
+            {{- if .Values.codimd.usecdn }}
+            - name: CMD_USECDN
+              value: {{ .Values.codimd.usecdn }}
+            {{- end }}
+            {{- if .Values.codimd.allow_anonymous }}
+            - name: CMD_ALLOW_ANONYMOUS
+              value: {{ .Values.codimd.allow_anonymous }}
+            {{- end }}
+            {{- if .Values.codimd.allow_anonymous_edits }}
+            - name: CMD_ALLOW_ANONYMOUS_EDITS
+              value: {{ .Values.codimd.allow_anonymous_edits }}
+            {{- end }}
+            {{- if .Values.codimd.default_permission }}
+            - name: CMD_DEFAULT_PERMISSION
+              value: {{ .Values.codimd.default_permission }}
+            {{- end }}
+            {{- if .Values.codimd.session_life }}
+            - name: CMD_SESSION_LIFE
+              value: {{ .Values.codimd.session_life }}
+            {{- end }}
+            # Storage section from Values
+            {{- if .Values.storage.s3.enabled }}
+            - name: CMD_S3_REGION
+              value: {{ .Values.storage.s3.region }}
+            - name: CMD_S3_BUCKET
+              value: {{ .Values.storage.s3.bucket }}
+              {{- if .Values.storage.s3.amazon.enabled }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: "s3"
+            - name: CMD_S3_ACCESS_KEY_ID
+              value: {{ .Values.storage.s3.amazon.access_key_id }}
+            - name: CMD_S3_SECRET_ACCESS_KEY
+              value: {{ .Values.storage.s3.amazon.secret_access_key }}
+              {{- end }}
+              {{- if .Values.storage.s3.minio.enabled }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: "minio"
+            - name: CMD_MINIO_ACCESS_KEY
+              value: {{ .Values.storage.s3.minio.access_key }}
+            - name: CMD_MINIO_SECRET_KEY
+              value: {{ .Values.storage.s3.minio.secret_key }}
+            - name: CMD_MINIO_ENDPOINT
+              value: {{ .Values.storage.s3.minio.endpoint }}
+            - name: CMD_MINIO_PORT
+              value: {{ .Values.storage.s3.minio.port }}
+            - name: CMD_MINIO_SECURE
+              value: {{ .Values.storage.s3.minio.secure }}
+              {{- end }}
+              {{- if .Values.storage.azure.enabled }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: "azure"
+            - name: CMD_AZURE_CONNECTION_STRING
+              value: {{ .Values.storage.azure.connection_string }}
+            - name: CMD_AZURE_CONTAINER
+              value: {{ .Values.storage.azure.container }}
+              {{- end }}
+            {{- end }}
+            {{- if .Values.storage.imgur.enabled }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: "imgur"
+            - name: CMD_IMGUR_CLIENTID
+              value: {{ .Values.storage.imgur.clientid }}
+            {{- end }}
+            {{- if .Values.storage.lutim.enabled }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: "lutim"
+            - name: CMD_LUTIM_URL
+              value: {{ .Values.storage.lutim.url }}
+            {{- end }}
+            # Auth section from Values
+            {{- if .Values.auth.email.enabled }}
+            - name: CMD_EMAIL
+              value: {{ .Values.auth.email.enabled }}
+            - name: CMD_ALLOW_EMAIL_REGISTER
+              value: {{ .Values.auth.email.allow_register }}
+            {{- end }}
+            {{- if .Values.auth.oauth2.enabled }}
+            - name: CMD_OAUTH2_USER_PROFILE_URL
+              value: {{ .Values.auth.oauth2.user_profile_url }}
+            - name: CMD_OAUTH2_USER_PROFILE_USERNAME_ATTR
+              value: {{ .Values.auth.oauth2.user_profile_username_attr }}
+            - name: CMD_OAUTH2_USER_PROFILE_DISPLAY_NAME_ATTR
+              value: {{ .Values.auth.oauth2.user_profile_display_name_attr }}
+            - name: CMD_OAUTH2_USER_PROFILE_EMAIL_ATTR
+              value: {{ .Values.auth.oauth2.user_profile_email_attr }}
+            - name: CMD_OAUTH2_TOKEN_URL
+              value: {{ .Values.auth.oauth2.token_url }}
+            - name: CMD_OAUTH2_AUTHORIZATION_URL
+              value: {{ .Values.auth.oauth2.authorization_url }}
+            - name: CMD_OAUTH2_CLIENT_ID
+              value: {{ .Values.auth.oauth2.client_id }}
+            - name: CMD_OAUTH2_CLIENT_SECRET
+              value: {{ .Values.auth.oauth2.client_secret }}
+            - name: CMD_OAUTH2_PROVIDERNAME
+              value: {{ .Values.auth.oauth2.providername }}
+            {{- end }}
+            {{- if .Values.auth.saml.enabled }}
+            - name: CMD_SAML_IDPSSOURL
+              value: {{ .Values.auth.saml.idpssourl }}
+            - name: CMD_SAML_IDPCERT
+              value:  {{ .Values.auth.saml.idpcert }}
+            - name: CMD_SAML_ISSUER
+              value:  {{ .Values.auth.saml.issuer }}
+            - name: CMD_SAML_DISABLEREQUESTEDAUTHNCONTEXT
+              value:  {{ .Values.auth.saml.disable_requested_authncontext }}
+            - name: CMD_SAML_IDENTIFIERFORMAT
+              value:  {{ .Values.auth.saml.identifierformat }}
+            - name: CMD_SAML_GROUPATTRIBUTE
+              value: {{ .Values.auth.saml.groupattribute }}
+            - name: CMD_SAML_REQUIREDGROUPS
+              value: {{ .Values.auth.saml.requiredgroups }}
+            - name: CMD_SAML_EXTERNALGROUPS
+              value: {{ .Values.auth.saml.externalgroups }}
+            - name: CMD_SAML_ATTRIBUTE_ID
+              value: {{ .Values.auth.saml.attribute_id }}
+            - name: CMD_SAML_ATTRIBUTE_USERNAME
+              value: {{ .Values.auth.saml.attribute_username }}
+            - name: CMD_SAML_ATTRIBUTE_EMAIL
+              value: {{ .Values.auth.saml.attribute_email }}
+            {{- end }}
+            {{- if .Values.auth.ldap.enabled }}
+            - name: CMD_LDAP_URL
+              value: {{ .Values.auth.ldap.url }}
+            - name: CMD_LDAP_BINDDN
+              value: {{ .Values.auth.ldap.binddn }}
+            - name: CMD_LDAP_BINDCREDENTIALS
+              value: {{ .Values.auth.ldap.bindcredentials }}
+            - name: CMD_LDAP_SEARCHBASE
+              value: {{ .Values.auth.ldap.searchbase }}
+            - name: CMD_LDAP_SEARCHFILTER
+              value: {{ .Values.auth.ldap.searchfilter }}
+            - name: CMD_LDAP_SEARCHATTRIBUTES
+              value: {{ .Values.auth.ldap.searchattributes }}
+            - name: CMD_LDAP_USERIDFIELD
+              value: {{ .Values.auth.ldap.useridfield }}
+            - name: CMD_LDAP_USERNAMEFIELD
+              value: {{ .Values.auth.ldap.usernamefield }}
+            - name: CMD_LDAP_TLS_CA
+              value: {{ .Values.auth.ldap.tls_ca }}
+            - name: CMD_LDAP_PROVIDERNAME
+              value: {{ .Values.auth.ldap.providername }}
+            {{- end }}
+            {{- if .Values.auth.openid.enabled }}
+              {{- if .Values.auth.openid.dropbox.enabled }}
+            - name: CMD_DROPBOX_CLIENTID
+              value: {{ .Values.auth.openid.clientid }}
+            - name: CMD_DROPBOX_CLIENTSECRET
+              value: {{ .Values.auth.openid.clientsecret }}
+              {{- end }}
+              {{- if .Values.auth.openid.facebook.enabled }}
+            - name: CMD_FACEBOOK_CLIENTID
+              value: {{ .Values.auth.openid.clientid }}
+            - name: CMD_FACEBOOK_CLIENTSECRET
+              value: {{ .Values.auth.openid.clientsecret }}
+              {{- end }}
+              {{- if .Values.auth.openid.github.enabled }}
+            - name: CMD_GITHUB_CLIENTID
+              value: {{ .Values.auth.openid.clientid }}
+            - name: CMD_GITHUB_CLIENTSECRET
+              value: {{ .Values.auth.openid.clientsecret }}
+              {{- end }}
+              {{- if .Values.auth.openid.google.enabled }}
+            - name: CMD_GOOGLE_CLIENTID
+              value: {{ .Values.auth.openid.clientid }}
+            - name: CMD_GOOGLE_CLIENTSECRET
+              value: {{ .Values.auth.openid.clientsecret }}
+              {{- end }}
+              {{- if .Values.auth.openid.twitter.enabled }}
+            - name: CMD_TWITTER_CONSUMERID
+              value: {{ .Values.auth.openid.clientid }}
+            - name: CMD_TWITTER_CONSUMERSECRET
+              value: {{ .Values.auth.openid.clientsecret }}
+              {{- end }}
+              {{- if .Values.auth.openid.gitlab.enabled }}
+            - name: CMD_GITLAB_CLIENTID
+              value: {{ .Values.auth.openid.clientid }}
+            - name: CMD_GITLAB_CLIENTSECRET
+              value: {{ .Values.auth.openid.clientsecret }}
+            - name: CMD_GITLAB_SCOPE
+              value: {{ .Values.auth.openid.gitlab.scope}}
+            - name: CMD_GITLAB_BASEURL
+              value: {{ .Values.auth.openid.gitlab.baseurl}}
+            - name: CMD_GITLAB_VERSION
+              value: {{ .Values.auth.openid.gitlab.version}}
+              {{- end }}
+              {{- if .Values.auth.openid.mattermost.enabled }}
+            - name: CMD_MATTERMOST_CLIENTID
+              value: {{ .Values.auth.openid.clientid }}
+            - name: CMD_MATTERMOST_CLIENTSECRET
+              value: {{ .Values.auth.openid.clientsecret }}
+            - name: CMD_MATTERMOST_BASEURL
+              value: {{ .Values.auth.openid.mattermost.baseurl }}
+              {{- end }}
+            {{- end }}
+            # Values.extraVars override all previously configured options
+            {{- if .Values.extraVars }}
+            {{ toYaml .Values.extraVars | indent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: "/codimd/public/uploads"
+      {{- with .Values.extraVolumeMounts }}
+{{ tpl . $ | indent 12 }}
+      {{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.securityContext }}
+      securityContext:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+      volumes:
+        - name: data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "codimd.fullname" . }}{{- end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+    {{- with .Values.extraVolumes }}
+{{ tpl . $ | indent 8 }}
+    {{- end }}
