@@ -84,6 +84,8 @@ affinity: {}
 ## CodiMD basics
 codimd:
   domain: "example.org"
+  # email: true
+  # allow_email_register: false
   # url_path: ""
   # use_ssl: true
   # url_addrport: false
@@ -141,10 +143,6 @@ storage:
 ## even when using other providers
 ## More than one provider can be active at any time
 auth:
-  email:
-    enabled: true
-    allow_register: true
-
   oauth2:
     enabled: false
     # user_profile_url: "https://example.com"
@@ -186,27 +184,32 @@ auth:
 
   openid:
     enabled: false
-    # clientid: ""
-    # clientsecret: ""
     ## provider can be one of Dropbox, Facebook, GitHub, GitLab, Mattermost, Google, Twitter
     ## Gitlab and Mattermost require additional configuration below
     dropbox:
-      enabled: false
+      # clientid: ""
+      # clientsecret: ""
     facebook:
-      enabled: false
+      # clientid: ""
+      # clientsecret: ""
     github:
-      enabled: false
+      # clientid: ""
+      # clientsecret: ""
     google:
-      enabled: false
+      # clientid: ""
+      # clientsecret: ""
     twitter:
-      enabled: false
+      # consumerkey: ""
+      # consumersecret: ""
     gitlab:
-      enabled: false
+      # clientid: ""
+      # clientsecret: ""
       # baseurl: "https://gitlab.example.org"
       # scope: "api"
       # version: "v3"
     mattermost:
-      enabled: false
+      # clientid: ""
+      # clientsecret: ""
       # baseurl: "https://mattermost.example.org"
 
 ## Add additional volumes and mounts, e. g. for certificates
