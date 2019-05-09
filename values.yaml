@@ -87,8 +87,8 @@ codimd:
   # email: true
   # allow_email_register: false
   # url_path: ""
-  # use_ssl: true
-  # url_addrport: false
+  # protocol_usessl: true
+  # url_addport: false
   # allow_origin: ""
   # allow_pdf_export: false
   # log_level: "info"
