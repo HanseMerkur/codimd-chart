@@ -70,6 +70,7 @@ spec:
               {{ toYaml .Values.extraVars | indent 12 }}
             {{- end }}
             # Basic configuration values
+            {{- $root := . }}
             {{- range $key, $value := .Values.codimd }}
             - name: CMD_{{ $key | upper }}
               value: "{{ $value }}"
@@ -79,16 +80,32 @@ spec:
               {{- if and ($value.enabled) (ne $key "openid") }}
                 {{- range $k, $v := $value }}
                   {{- if ne $k "enabled" }}
+                    {{- if and (eq $key "oauth2") (contains "secret" $k) }}
+            - name: CMD_{{ $key | upper }}_{{ $k | upper }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "codimd.fullname" $root }}
+                  key: {{ $key }}Secret
+                    {{- else }}
             - name: CMD_{{ $key | upper }}_{{ $k | upper }}
               value: "{{ $v }}"
+                    {{- end }}
                   {{- end }}
                 {{- end }}
               {{- else if and ($value.enabled) (eq $key "openid") }}
                 {{- range $k, $v := $value }}
                   {{- if ne $k "enabled" }}
                     {{- range $i, $j := $v }}
+                      {{- if contains "secret" $i }}
+            - name: CMD_{{ $k | upper }}_{{ $i | upper }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "codimd.fullname" $root }}
+                  key: {{ $k }}Secret
+                      {{- else }}
             - name: CMD_{{ $k | upper }}_{{ $i | upper }}
               value: "{{ $j }}"
+                      {{- end }}
                     {{- end }}
                   {{- end }}
                 {{- end }}
@@ -106,11 +123,23 @@ spec:
               value: "{{ $value.amazon.access_key_id }}"
             - name: CMD_S3_SECRET_ACCESS_KEY
               value: "{{ $value.amazon.secret_access_key }}"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "codimd.fullname" $root }}
+                  key: amazonSecret
                 {{- else if $value.minio.enabled }}
                   {{- range $k, $v := $value.minio }}
                     {{- if ne $k "enabled" }}
+                      {{- if contains "secret" $k }}
+            - name: CMD_MINIO_{{ $k | upper }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "codimd.fullname" $root }}
+                  key: minioSecret
+                      {{- else }}
             - name: CMD_MINIO_{{ $k | upper }}
               value: "{{ $v }}"
+                      {{- end }}
                     {{- end }}
                   {{- end }}
                 {{- end }}
