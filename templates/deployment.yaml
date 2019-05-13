@@ -119,6 +119,8 @@ spec:
             - name: CMD_S3_BUCKET
               value: "{{ $value.bucket }}"
                 {{- if $value.amazon.enabled }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: s3
             - name: CMD_S3_ACCESS_KEY_ID
               value: "{{ $value.amazon.access_key_id }}"
             - name: CMD_S3_SECRET_ACCESS_KEY
@@ -128,6 +130,8 @@ spec:
                   name: {{ template "codimd.fullname" $root }}
                   key: amazonSecret
                 {{- else if $value.minio.enabled }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: minio
                   {{- range $k, $v := $value.minio }}
                     {{- if ne $k "enabled" }}
                       {{- if contains "secret" $k }}
@@ -144,6 +148,8 @@ spec:
                   {{- end }}
                 {{- end }}
               {{- else if and ($value.enabled) (ne $key "s3") }}
+            - name: CMD_IMAGE_UPLOAD_TYPE
+              value: {{ $key }}
                 {{- range $k, $v := $value }}
                   {{- if ne $k "enabled" }}
             - name: CMD_{{ $key | upper }}_{{ $k | upper }}
