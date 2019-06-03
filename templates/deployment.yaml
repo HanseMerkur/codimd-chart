@@ -66,8 +66,8 @@ spec:
                   key: sessionSecret
             - name: CMD_DB_URL
               value: "postgres://$(CMD_DB_USER):$(CMD_DB_PASSWORD)@$(CMD_DB_HOST):$(CMD_DB_PORT)/$(CMD_DB_DATABASE)"
-            {{- if .Values.extraVars }}
-              {{ toYaml .Values.extraVars | indent 12 }}
+            {{- with .Values.extraVars }}
+{{ toYaml . | indent 12 }}
             {{- end }}
             # Basic configuration values
             {{- $root := . }}
