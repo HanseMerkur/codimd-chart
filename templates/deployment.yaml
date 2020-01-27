@@ -13,6 +13,11 @@ spec:
     matchLabels:
       app: {{ template "codimd.name" . }}
       release: {{ .Release.Name }}
+  strategy:
+    type: {{ .Values.deploymentStrategy }}
+  {{- if ne .Values.deploymentStrategy "RollingUpdate" }}
+    rollingUpdate: null
+  {{- end }}
   template:
     metadata:
       labels:
@@ -22,11 +27,6 @@ spec:
       annotations:
 {{ toYaml . | indent 8 }}
 {{- end }}
-  strategy:
-    type: {{ .Values.deploymentStrategy }}
-  {{- if ne .Values.deploymentStrategy "RollingUpdate" }}
-    rollingUpdate: null
-  {{- end }}
     spec:
       containers:
         - name: {{ .Chart.Name }}
