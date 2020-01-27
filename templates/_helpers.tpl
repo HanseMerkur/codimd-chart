@@ -71,3 +71,16 @@ Get the secret name
     {{- printf "%s" (include "codimd.fullname" .) -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Get the postgress password secret
+*/}}
+{{- define "postgresql.secretName" -}}
+{{- if .Values.global.postgresql.existingSecret }}
+    {{- printf "%s" .Values.global.postgresql.existingSecret -}}
+{{- else if .Values.postgresql.existingSecret -}}
+    {{- printf "%s" .Values.postgresql.existingSecret -}}
+{{- else -}}
+    {{- printf "%s" (include "codimd.postgresql.fullname" .) -}}
+{{- end -}}
+{{- end -}}
