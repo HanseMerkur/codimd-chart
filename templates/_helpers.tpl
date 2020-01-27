@@ -50,3 +50,25 @@ Determine database host based on use of postgresql dependency.
 {{- .Values.postgresql.postgresHost -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Return true if a secret object should be created
+*/}}
+{{- define "codimd.createSecret" -}}
+{{- if .Values.existingSecret }}
+{{- else if .Values.existingSecret -}}
+{{- else -}}
+    {{- true -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get the secret name
+*/}}
+{{- define "codimd.secretName" -}}
+{{- if .Values.existingSecret -}}
+    {{- printf "%s" .Values.existingSecret -}}
+{{- else -}}
+    {{- printf "%s" (include "codimd.fullname" .) -}}
+{{- end -}}
+{{- end -}}

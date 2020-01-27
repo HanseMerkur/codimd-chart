@@ -67,7 +67,7 @@ spec:
             - name: CMD_SESSION_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "codimd.fullname" . }}
+                  name: {{ template "codimd.secretName" . }}
                   key: sessionSecret
             - name: CMD_DB_URL
               value: "postgres://$(CMD_DB_USER):$(CMD_DB_PASSWORD)@$(CMD_DB_HOST):$(CMD_DB_PORT)/$(CMD_DB_DATABASE)"
@@ -89,7 +89,7 @@ spec:
             - name: CMD_{{ $key | upper }}_{{ $k | upper }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "codimd.fullname" $root }}
+                  name: {{ template "codimd.secretName" $root }}
                   key: {{ $key }}Secret
                     {{- else }}
             - name: CMD_{{ $key | upper }}_{{ $k | upper }}
@@ -105,7 +105,7 @@ spec:
             - name: CMD_{{ $k | upper }}_{{ $i | upper }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "codimd.fullname" $root }}
+                  name: {{ template "codimd.secretName" $root }}
                   key: {{ $k }}Secret
                       {{- else }}
             - name: CMD_{{ $k | upper }}_{{ $i | upper }}
@@ -132,7 +132,7 @@ spec:
               value: "{{ $value.amazon.secret_access_key }}"
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "codimd.fullname" $root }}
+                  name: {{ template "codimd.secretName" $root }}
                   key: amazonSecret
                 {{- else if $value.minio.enabled }}
             - name: CMD_IMAGE_UPLOAD_TYPE
@@ -143,7 +143,7 @@ spec:
             - name: CMD_MINIO_{{ $k | upper }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "codimd.fullname" $root }}
+                  name: {{ template "codimd.secretName" $root }}
                   key: minioSecret
                       {{- else }}
             - name: CMD_MINIO_{{ $k | upper }}

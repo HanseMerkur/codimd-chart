@@ -68,6 +68,9 @@ persistence:
   ##
   # storageClass: "-"
 
+# Use existing in-cluster secret
+# existingSecret:
+
 podAnnotations: {}
 
 ## Additional environment variables can be set to configure CodiMD
