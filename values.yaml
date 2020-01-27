@@ -230,10 +230,3 @@ postgresql:
 ## Ref: https://github.com/helm/charts/issues/5167
 ## Default: random 10 character string
 # postgresqlPassword:
-
-  ## stable/postgresql requires the init container run to set correct permissions
-  ## for the data directory. But it can run as the postgresql container uid if
-  ## the fsUser already set the correct ownership on mount
-  volumePermissions:
-    securityContext:
-      runAsUser: 1001 # postgresql default container uid
