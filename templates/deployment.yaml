@@ -59,7 +59,7 @@ spec:
               {{- if .Values.postgresql.enabled }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "codimd.postgresql.fullname" . }}
+                  name: {{ template "codimd.postgresql.secretName" . }}
                   key: postgresql-password
               {{- else }}
               value: {{ .Values.postgresql.postgresqlPassword }}

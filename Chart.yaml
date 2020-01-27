@@ -1,6 +1,6 @@
 name: codimd
 apiVersion: v1
-version: "1.5.2"
+version: "1.5.3"
 appVersion: "1.5.0"
 description: Realtime collaborative markdown notes on all platforms.
 icon: https://codimd.org/favicon.png
