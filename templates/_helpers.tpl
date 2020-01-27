@@ -56,7 +56,6 @@ Return true if a secret object should be created
 */}}
 {{- define "codimd.createSecret" -}}
 {{- if .Values.existingSecret }}
-{{- else if .Values.existingSecret -}}
 {{- else -}}
     {{- true -}}
 {{- end -}}
