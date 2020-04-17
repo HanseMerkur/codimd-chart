@@ -224,6 +224,10 @@ extraVolumeMounts: |
 ## Configuration values for the postgresql dependency.
 ## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
 ##
+global:
+  postgresql:
+    existingSecret:
+
 postgresql:
   enabled: true
   postgresqlUsername: "codimd"
